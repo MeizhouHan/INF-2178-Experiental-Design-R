@@ -1,6 +1,6 @@
 ---
 title: "INF2178 Rmarkdown Example"
-author: "Michael Chong"
+author: Sophie
 date: "15/01/2020"
 output: pdf_document
 ---
