@@ -1,0 +1,186 @@
+---
+title: "INF2178 Rmarkdown Example"
+author: "Michael Chong"
+date: "15/01/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+This is an Rmarkdown document that illustrates a workflow where we:
+
+1. Use the `opendatatoronto` R package to download a dataset
+2. Manipulate the data using tools from the `dplyr` and `tidyr` packages
+3. Visualizing the data by making a plot using the `ggplot2` R package
+
+## Prerequesites
+
+If your computer has an internet connection, you can download and install these R packages directly from CRAN (Comprehensive R Archive Network) using the `install.packages()` function.
+
+```{r}
+# Vector of string objects that holds the names of the packages
+my_packages <- c("opendatatoronto", "dplyr", "ggplot2", "tidyr")
+
+# For each of the 3 packages, check whether each one exists, and install if not
+for (pkg in my_packages) {
+  
+  if (!pkg %in% installed.packages()) { 
+    # If package is not installed, install it:
+    install.packages(pkg)
+  } 
+}
+```
+
+After installing, we still need to load the package to make the functions available to us. We do this with `library()`:
+
+```{r}
+library(opendatatoronto)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+```
+
+# Finding and downloading data using `opendatatoronto`
+
+## Finding the data
+
+To find a dataset you like, you have a couple options:
+
+1. Search for a dataset manually via the [Toronto Open Data Portal](https://open.toronto.ca/)
+2. Use the `search_packages()` function
+
+Here we'll use the `search_packages()` function to keep this document self-contained.
+
+```{r}
+# Search packages (this returns a table)
+delay_packages <- search_packages("delay")
+
+# Print the table
+delay_packages
+```
+
+The R output might not show the full titles of the datasets when it prints the dataframe. If so, it might be helpful to access the `title` column of the dataframe as a vector, which we can do using the `$` operator:
+
+```{r}
+delay_packages$title
+```
+
+Among these, I'd like to see what's available in the "TTC Subway Delay Data" data. I do this using `list_package_resources()`. The argument of this function is a 1-line dataframe in the format of the output of `search_packages()`. So before I use `list_package_resources()`, I  narrow down the `ridership_packages` dataframe like so using the `filter()` function:
+
+```{r}
+subway_delay_package<- delay_packages %>%
+  filter(title == "TTC Subway Delay Data") # Only keep the row(s) where the title is "TTC Subway Delay Data"
+```
+
+Our new 1-line data frame looks like:
+
+```{r}
+subway_delay_package
+```
+Now we can pass this as an argument to `list_package_resources()`:
+
+```{r}
+list_package_resources(subway_delay_package)
+```
+
+Again, we might have trouble seeing the full first column, so let's extract the `name` column as a vector:
+
+```{r}
+list_package_resources(subway_delay_package)$name
+```
+
+## Retrieving the data
+
+Suppose we're interested in looking at the delay in September of 2018. We can retrieve the data by `filter()`ing this table to the corresponding line, and then using `get_resource()`.
+
+```{r}
+subway_sept2018 <- subway_delay_package %>% # Start with the package 
+  list_package_resources() %>% # List the resources in the package
+  filter(name == "ttc-subway-delay-september-2018") %>% # Only keep the resource we want 
+  get_resource()
+```
+
+Finally we have the data frame that we want:
+
+```{r}
+subway_sept2018
+```
+
+
+# Plotting
+
+## Example 1: Delays by line
+
+One thing we might be interested in is the number of delays observed in each subway line. In the dataframe, each row represents one delay, and the affected subway line is recorded in the `Line` column:
+
+```{r}
+# See what the "Line" column looks like
+subway_sept2018 %>% select(Line)
+```
+
+Before the data is ready to plot, we want to count the number of observations for each subway line. We can do this with the `summarise()` function from `dplyr`:
+
+```{r}
+line_counts <- subway_sept2018 %>%
+  group_by(Line) %>% # This tells the following commands to perform operations "grouping" by Line
+  summarise(number_of_delays = n()) # Count the number of observations using n() 
+
+# Print
+line_counts
+```
+
+
+Here's an example of making a bar chart using `ggplot`:
+
+```{r}
+# Pass data to ggplot:
+# (Also specify our x and y axes):
+ggplot(line_counts, aes(x = Line, y = number_of_delays)) + 
+  # Specify that we want a bar graph:
+  geom_col() + 
+  # Add titles and axis labels:
+  labs(title = "TTC Subway Delays in Sept. 2018", 
+       x = "Subway Line", 
+       y = "Number of Delays") 
+```
+
+## Example 2: Delays by time of day
+
+Here I'm interested in the `Time` column which records the time of day of the delay. Here's what the column looks like:
+
+```{r}
+# Show only the Time column
+subway_sept2018 %>% select(Time)
+```
+
+The data isn't quite in the right format. Notice that we're only interested in keeping the hour part (i.e. the 2 numbers before the `:`). We can do this using the `separate()` function from the `tidyr` package. 
+
+```{r}
+hour_counts <- subway_sept2018 %>% 
+  # Separate Time into hour and minute
+  separate(Time, into = c("hour", "minute"), sep = ":") %>%
+  # Group by hour so that our counting function will count by groups 
+  group_by(hour) %>%
+  # Count
+  summarise(number_of_delays = n())
+
+# Print
+hour_counts
+```
+
+Then we can plot using similar syntax to the previous example. This time we'll use a line graph, which we specify using `geom_line()`.
+```{r}
+ggplot(hour_counts, aes(x = hour, y = number_of_delays)) +
+  geom_line(aes(group = 1)) + # group=1 tells the line graph that all points are connected 
+  labs(title = "TTC Subway Delays by the hour, Sept. 2018", 
+       x = "Hour of day", 
+       y = "Number of delays")
+```
+{eval = False} code runs but not printed
+
+
+
