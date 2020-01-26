@@ -1,0 +1,77 @@
+---
+title: "INF 2178 Problem Set 1 - Team: Cherry"
+author: "Weiying Fu, Meizhou Han, Jing Liu"
+date: "01/23/2020"
+output:
+  pdf_document: default
+  word_document: default
+fontsize: 12pt
+abstract: This project generates a line chart about the number of trips departured from King Street Station hourly of Toronto TTC system in 2017. Figure 1 shows that 7 a.m is the peak time of a day and has the largest number of trips departured. This situation matches the real life situation that 7 a.m is the rush hours at work. The analysis results aim to oversee the trips management of TTC system so that the system can be adjusted timely and become more efficient. 
+---
+### Introduction
+This project is based on the "King Street Pilot-Disaggregate headway and travel time" package which downloaded from opendatatoronto. We choose to use the "ttc-king-st-pilot-disaggregate-weekday-travel-time-2017-2018-xlsx" dataset which provides the weekday transportation information of King Street Station. In order to locate the peak time of King Street Station, we pick the column 'TripTime' for further analysis.
+
+```{r include=FALSE}
+library(opendatatoronto)
+library(tidyr)
+library(dplyr, warn.conflicts = FALSE)
+library(ggplot2)
+
+TTC_package <- show_package("e74ba0ba-07c8-4a18-bac9-57bd2b9698c1")
+TTC_package
+
+list_package_resources(TTC_package)
+list_package_resources(TTC_package)$name
+
+TTC_travel_2018 <- TTC_package %>% 
+  list_package_resources() %>% 
+  filter(name 
+         == "ttc-king-st-pilot-disaggregate-weekday-travel-time-2017-2018-xlsx") %>% 
+  get_resource()
+
+Sheet_2017 <- TTC_travel_2018$Sheet1
+```
+By running summary function, R presents that the dataset contains 342,759 observations with 14 variables, which are TripID, RouteNumber, VehicleNumber, RunNumber, Direction, FromStopAbbr, FromStopName, ToStopAbbr, ToStopName, TimePeriod, ObservedDate, TripTime, RunningTime, and Speed. The type of vehicle is a bus and this pilot contains 31 lines in total. Overall, this is a high quality dataset, there's no missing value or outliers. One weakness might be the format of the 'Triptime' column. It would be more convinient to analyze if the date and time are sepereated.
+```{r eval = FALSE}
+summary(Sheet_2017)
+```
+To find out the peak time, variable TripTime is split into date and times by using the character “ ”. However, the time is represented in the “00:00:00” format. In order to get the "hour" factor, the new variable times that got from TripTime is seperated in "hour", "min", and "second" by using the character ":". By grouping the 'hour' variable, we get the number of trips departured from King St. Pilot in each hour.  
+```{r eval=FALSE}
+Sheet_2017 %>% select(TripTime)
+trips_count <- Sheet_2017 %>% 
+  separate(TripTime, into = c("date", "times"), sep = " ") %>%
+  separate(times, into = c("hour", "min","second"), sep = ":") %>%
+  group_by(hour) %>%
+  summarise(number_of_trip = n())
+trips_count
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T, results = "hide")
+Sheet_2017 %>% select(TripTime)
+trips_count <- Sheet_2017 %>% 
+  separate(TripTime, into = c("date", "times"), sep = " ") %>%
+  separate(times, into = c("hour", "min","second"), sep = ":") %>%
+  group_by(hour) %>%
+  summarise(number_of_trip = n())
+trips_count
+```
+
+```{r, include=TRUE}
+ggplot(trips_count, aes(x = hour, y = number_of_trip)) +
+  geom_line(aes(group = 1)) +
+  labs(title = "    Figure.1  King St.Station Departure Trips per hour, 2017", 
+       x = "Hour of day", 
+       y = "Number of trips departure")
+```
+The line chart "Figure.1" illustrates that 7 a.m has the largest number of departure trips. The trendline slightly decreases from 7 a.m to noon. It comes to a second peak from 4 p.m to 6 p.m. The result indicates that there are two peak-time periods on weekdays which are 7 a.m and 4-6 p.m respectively. This result matches the reality that, due to the needs of work and school, the time period from 7 a.m to 9 a.m and from 4 p.m to 6 p.m are the rush hours during the weekdays. Therefore, the current bus asset management of King St. Pilot is reasonable.
+
+
+### References
+```{r echo=TRUE}
+citation("opendatatoronto")
+citation("tidyr")
+citation("dplyr")
+citation("ggplot2")
+```
+
