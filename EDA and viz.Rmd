@@ -1,6 +1,6 @@
 ---
 title: "Exploratory Data Analysis"
-author: "Rohan Alexander"
+author: "Sophie"
 date: "30 January 2020"
 output:
   pdf_document:
@@ -13,24 +13,6 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
-
-
-# Admin
-
-## Office hours change
-As no one comes to my office hour before the lecture, I'm going to change it from that reguarly scheduled time, to by appointment. If you have anything that you'd like to discuss then please email me and we can work out a time that suits.
-
-## Problem set feedback
-
-See discussion board.
-
-## Data Cleaning Brown Bag
-
-- Meet tomorrow at noon in Room 507, Bissell Building with Arik speaking.
-- All invited, see https://rohanalexander.com/brownbag.html for more details.
-
-
-
 
 
 # Overview
@@ -409,19 +391,5 @@ df_out_r
 ggplot(df_out_r,aes(x=PC1,y=PC2,label=feature )) + geom_text_repel()
 ```
 
-
-
-# Exercises
-
-1. Using the `opendatatoronto` package, download the data on mayoral campaign contributions for 2014. (note: the 2014 file you will get from `get_resource`, so just keep the sheet that relates to the Mayor election). 
-2. Clean up the data format (fixing the parsing issue and standardizing the column names using `janitor`)
-3. Summarize the variables in the dataset. Are there missing values, and if so, should we be worried about them? Is every variable in the format it should be? If not, create new variable(s) that are in the right format.
-4. Visually explore the distribution of values of the contributions. What contributions are notable outliers? Do they share a similar characteristic(s)? It may be useful to plot the distribution of contributions without these outliers to get a better sense of the majority of the data. 
-5. List the top five candidates in each of these categories:
-    + total contributions
-    + mean contribution
-    + number of contributions
-6. Repeat 5 but without contributions from the candidates themselves.
-7. How many contributors gave money to more than one candidate? 
 
 
